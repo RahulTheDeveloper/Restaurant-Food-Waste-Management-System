@@ -1,0 +1,23 @@
+cat <<EOL >> .gitignore
+# Byte-compiled files
+__pycache__/
+*.pyc
+
+# Virtual environment
+venv/
+.venv
+.env
+
+# Logs
+*.log
+EOL
+
+# Ignore SQLite database files
+*.sqlite3
+*.sqlite
+*.db
+*.db3
+
+.env
+*.env
+.elasticbeanstalk/

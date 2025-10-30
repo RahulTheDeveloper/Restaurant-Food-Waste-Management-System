@@ -1,0 +1,71 @@
+services:
+  web:
+    build:
+      context: .
+    container_name: waste_management
+    environment:
+      AWS_STORAGE_BUCKET_NAME: ${AWS_STORAGE_BUCKET_NAME}
+      AWS_S3_REGION_NAME: ${AWS_S3_REGION_NAME}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${DATABASE_NAME}
+    volumes:
+      - .:/food_waste_management
+    expose:
+      - "8000"
+    depends_on:
+      - redis
+
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - web
+
+  redis:
+    image: redis:7
+    container_name: redis_food_waste_management
+    ports:
+      - "6379:6379"
+
+  celery:
+    build:
+      context: .
+    container_name: celery_worker
+    command: celery -A food_waste_management worker --loglevel=info
+    environment:
+      AWS_STORAGE_BUCKET_NAME: ${AWS_STORAGE_BUCKET_NAME}
+      AWS_S3_REGION_NAME: ${AWS_S3_REGION_NAME}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${DATABASE_NAME}
+    volumes:
+      - .:/food_waste_management
+    depends_on:
+      - redis
+
+  celery-beat:
+    build:
+      context: .
+    container_name: celery_beat
+    command: celery -A food_waste_management beat --loglevel=info
+    environment:
+      AWS_STORAGE_BUCKET_NAME: ${AWS_STORAGE_BUCKET_NAME}
+      AWS_S3_REGION_NAME: ${AWS_S3_REGION_NAME}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${DATABASE_NAME}
+    volumes:
+      - .:/food_waste_management
+    depends_on:
+      - redis
